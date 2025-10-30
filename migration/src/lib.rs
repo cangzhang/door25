@@ -3,6 +3,8 @@
 pub use sea_orm_migration::prelude::*;
 mod m20220101_000001_users;
 
+mod m20251030_163927_oct_confs;
+mod m20251030_164546_door_confs;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -10,6 +12,8 @@ impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         vec![
             Box::new(m20220101_000001_users::Migration),
+            Box::new(m20251030_163927_oct_confs::Migration),
+            Box::new(m20251030_164546_door_confs::Migration),
             // inject-above (do not remove this comment)
         ]
     }
