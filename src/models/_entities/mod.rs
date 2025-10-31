@@ -2,5 +2,6 @@
 
 pub mod prelude;
 
+pub mod door_confs;
 pub mod oct_confs;
 pub mod users;
