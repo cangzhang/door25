@@ -8,14 +8,14 @@ use crate::models::_entities::door_confs::{ActiveModel, Entity, Model};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
-    pub user_uid: String,
+    pub user_pid: String,
     pub uid: Uuid,
     pub door_info: Option<serde_json::Value>,
     }
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.user_uid = Set(self.user_uid.clone());
+      item.user_pid = Set(self.user_pid.clone());
       item.uid = Set(self.uid);
       item.door_info = Set(self.door_info.clone());
       }

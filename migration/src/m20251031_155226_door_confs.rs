@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
             
             ("id", ColType::PkAuto),
             
-            ("user_uid", ColType::Text),
+            ("user_pid", ColType::Text),
             ("uid", ColType::UuidUniq),
             ("door_info", ColType::JsonNull),
             ],
