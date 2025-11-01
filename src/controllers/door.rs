@@ -5,6 +5,7 @@ use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::door_confs::{ActiveModel, Entity, Model, Column};
+use crate::models::_entities::user_doors;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
@@ -24,20 +25,37 @@ async fn load_item(ctx: &AppContext, uid: String) -> Result<Model> {
 
 #[debug_handler]
 pub async fn list(auth: auth::JWT, State(ctx): State<AppContext>) -> Result<Response> {
-    let pid = auth.claims.pid.clone();
-    format::json(Entity::find().filter(Column::UserPid.eq(pid)).all(&ctx.db).await?)
+    let user_pid = auth.claims.pid.to_string();
+    let door_links = user_doors::Entity::find()
+        .filter(user_doors::Column::UserPid.eq(user_pid))
+        .all(&ctx.db)
+        .await?;
+    if door_links.is_empty() {
+        return format::json(Vec::<Model>::new());
+    }
+    let door_uids: Vec<String> = door_links.into_iter().map(|link| link.door_uid).collect();
+    let doors = Entity::find()
+        .filter(Column::Uid.is_in(door_uids))
+        .all(&ctx.db)
+        .await?;
+    format::json(doors)
 }
 
 #[debug_handler]
 pub async fn add(auth: auth::JWT, State(ctx): State<AppContext>, Json(params): Json<Params>) -> Result<Response> {
-    println!("user pid: {}", &auth.claims.pid);
     let mut item = ActiveModel {
-        user_pid: Set(auth.claims.pid.clone()),
-        uid: Set(uuid::Uuid::new_v4()),
+        uid: Set(uuid::Uuid::new_v4().to_string()),
         ..Default::default()
     };
     params.apply(&mut item);
     let item = item.insert(&ctx.db).await?;
+    let user_pid = auth.claims.pid.clone();
+    let link = user_doors::ActiveModel {
+        user_pid: Set(user_pid),
+        door_uid: Set(item.uid.to_string()),
+        ..Default::default()
+    };
+    link.insert(&ctx.db).await?;
     format::json(item)
 }
 
@@ -46,9 +64,19 @@ pub async fn open(
     auth: auth::JWT,
     Path(uid): Path<String>,
     State(ctx): State<AppContext>,
-    Json(params): Json<Params>,
 ) -> Result<Response> {
-    format::empty_json()
+    let user_pid = auth.claims.pid.to_string();
+    let door_link = user_doors::Entity::find()
+        .filter(user_doors::Column::UserPid.eq(user_pid))
+        .filter(user_doors::Column::DoorUid.eq(uid.clone()))
+        .one(&ctx.db)
+        .await?;
+    if door_link.is_none() {
+        return Err(Error::NotFound);
+    }
+
+    let door = load_item(&ctx, uid).await?;
+    format::json(door)
 }
 
 #[debug_handler]
@@ -61,5 +89,6 @@ pub fn routes() -> Routes {
         .prefix("api/doors/")
         .add("/", post(add))
         .add("/", get(list))
-        .add("{uid}", get(get_one))
+        .add("/open/{door_uid}", post(open))
+        .add("{door_uid}", get(get_one))
 }

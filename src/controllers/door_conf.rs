@@ -8,15 +8,13 @@ use crate::models::_entities::door_confs::{ActiveModel, Entity, Model};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
-    pub user_pid: String,
-    pub uid: Uuid,
+    pub uid: String,
     pub door_info: Option<serde_json::Value>,
     }
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.user_pid = Set(self.user_pid.clone());
-      item.uid = Set(self.uid);
+      item.uid = Set(self.uid.clone());
       item.door_info = Set(self.door_info.clone());
       }
 }
@@ -70,8 +68,4 @@ pub fn routes() -> Routes {
         .prefix("api/door_confs/")
         .add("/", get(list))
         .add("/", post(add))
-        .add("{id}", get(get_one))
-        .add("{id}", delete(remove))
-        .add("{id}", put(update))
-        .add("{id}", patch(update))
 }

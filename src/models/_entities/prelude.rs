@@ -2,4 +2,5 @@
 
 pub use super::door_confs::Entity as DoorConfs;
 pub use super::oct_confs::Entity as OctConfs;
+pub use super::user_doors::Entity as UserDoors;
 pub use super::users::Entity as Users;
