@@ -4,8 +4,10 @@
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::models::_entities::door_confs::{ActiveModel, Entity, Model, Column};
-use crate::models::_entities::user_doors;
+use crate::models::_entities::{
+    door_confs::{ActiveModel, Column, Entity, Model},
+    oct_confs, user_doors,
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
@@ -19,7 +21,10 @@ impl Params {
 }
 
 async fn load_item(ctx: &AppContext, uid: String) -> Result<Model> {
-    let item = Entity::find().filter(Column::Uid.eq(uid)).one(&ctx.db).await?;
+    let item = Entity::find()
+        .filter(Column::Uid.eq(uid))
+        .one(&ctx.db)
+        .await?;
     item.ok_or_else(|| Error::NotFound)
 }
 
@@ -42,7 +47,11 @@ pub async fn list(auth: auth::JWT, State(ctx): State<AppContext>) -> Result<Resp
 }
 
 #[debug_handler]
-pub async fn add(auth: auth::JWT, State(ctx): State<AppContext>, Json(params): Json<Params>) -> Result<Response> {
+pub async fn add(
+    auth: auth::JWT,
+    State(ctx): State<AppContext>,
+    Json(params): Json<Params>,
+) -> Result<Response> {
     let mut item = ActiveModel {
         uid: Set(uuid::Uuid::new_v4().to_string()),
         ..Default::default()
@@ -67,16 +76,49 @@ pub async fn open(
 ) -> Result<Response> {
     let user_pid = auth.claims.pid.to_string();
     let door_link = user_doors::Entity::find()
-        .filter(user_doors::Column::UserPid.eq(user_pid))
-        .filter(user_doors::Column::DoorUid.eq(uid.clone()))
+        .filter(
+            user_doors::Column::UserPid
+                .eq(&user_pid)
+                .and(user_doors::Column::DoorUid.eq(uid.clone())),
+        )
         .one(&ctx.db)
         .await?;
     if door_link.is_none() {
         return Err(Error::NotFound);
     }
-
     let door = load_item(&ctx, uid).await?;
-    format::json(door)
+
+    let oct_conf = oct_confs::Entity::find()
+        .filter(
+            oct_confs::Column::UserPid
+                .eq(&user_pid)
+                .and(oct_confs::Column::Token.is_not_null()),
+        )
+        .one(&ctx.db)
+        .await?;
+    if oct_conf.is_none() {
+        return Err(Error::BadRequest("OCT configuration not found".to_string()));
+    }
+
+    let oct_conf = oct_conf.unwrap();
+    let openid = oct_conf.openid.clone().unwrap();
+    let token = oct_conf.token.clone().unwrap();
+    let body =
+        ureq::post("https://octlife.octlife.cn/consumer/mall-applets-management/entrance/openDor")
+            .header("openid", &openid)
+            .header("token", &token)
+            .send_json(&door.door_info)
+            .map_err(|e| Error::BadRequest(format!("Failed to send request: {}", e)))?
+            .body_mut()
+            .read_json::<serde_json::Value>()
+            .map_err(|e| Error::BadRequest(format!("Failed to read response: {}", e)))?;
+
+    format::json({
+        serde_json::json!({
+            "door": door,
+            "response": body,
+        })
+    })
 }
 
 #[debug_handler]
