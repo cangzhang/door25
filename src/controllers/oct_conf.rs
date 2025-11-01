@@ -9,13 +9,13 @@ use crate::models::_entities::oct_confs::{ActiveModel, Entity, Model};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
     pub token: Option<String>,
-    pub openid: Option<String>,
+    pub user_pid: Option<String>,
     }
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
       item.token = Set(self.token.clone());
-      item.openid = Set(self.openid.clone());
+      item.user_pid = Set(self.user_pid.clone());
       }
 }
 

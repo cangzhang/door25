@@ -14,6 +14,8 @@ pub struct Model {
     pub token: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub openid: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub user_pid: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

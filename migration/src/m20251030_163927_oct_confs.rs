@@ -13,6 +13,7 @@ impl MigrationTrait for Migration {
             ("id", ColType::PkAuto),
             
             ("token", ColType::TextNull),
+            ("user_pid", ColType::TextNull),
             ("openid", ColType::TextNull),
             ],
             &[
