@@ -1,10 +1,12 @@
+use axum::http::{header, HeaderValue};
+
 use crate::{
     mailers::auth::AuthMailer,
     models::{
         _entities::users,
         users::{LoginParams, RegisterParams},
     },
-    views::auth::{CurrentResponse, LoginResponse},
+    views::{self, auth::{CurrentResponse, LoginResponse}},
 };
 use loco_rs::prelude::*;
 use regex::Regex;
@@ -155,7 +157,18 @@ async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -
         .generate_jwt(&jwt_secret.secret, jwt_secret.expiration)
         .or_else(|_| unauthorized("unauthorized!"))?;
 
-    format::json(LoginResponse::new(&user, &token))
+    let cookie_value = format!(
+        "token={}; HttpOnly; Path=/; Max-Age={}; SameSite=Lax",
+        token, jwt_secret.expiration
+    );
+
+    let mut response = format::json(LoginResponse::new(&user, &token))?;
+    response.headers_mut().insert(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&cookie_value)?,
+    );
+
+    Ok(response)
 }
 
 #[debug_handler]
@@ -270,4 +283,12 @@ pub fn routes() -> Routes {
         .add("/magic-link", post(magic_link))
         .add("/magic-link/{token}", get(magic_link_verify))
         .add("/resend-verification-mail", post(resend_verification_email))
+}
+
+pub async fn render_login(ViewEngine(v): ViewEngine<TeraView>) -> Result<impl IntoResponse> {
+    views::login::login(v)
+}
+
+pub fn view_routes() -> Routes {
+    Routes::new().add("/login", get(render_login))
 }

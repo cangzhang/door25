@@ -96,7 +96,7 @@ auth:
     # Secret key for token generation and verification
     secret: Ze2rWN37RjucsGH8Witx
     # Token expiration time in seconds
-    expiration: 604800 # 7 days
+    expiration: 31556952 # 1 year
     location:
       from: Cookie
       name: token
