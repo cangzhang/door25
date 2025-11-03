@@ -10,13 +10,13 @@ use crate::models::_entities::door_confs::{ActiveModel, Entity, Model};
 pub struct Params {
     pub uid: String,
     pub door_info: Option<serde_json::Value>,
-    }
+}
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.uid = Set(self.uid.clone());
-      item.door_info = Set(self.door_info.clone());
-      }
+        item.uid = Set(self.uid.clone());
+        item.door_info = Set(self.door_info.clone());
+    }
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {

@@ -10,13 +10,13 @@ use crate::models::_entities::oct_confs::{ActiveModel, Entity, Model};
 pub struct Params {
     pub token: Option<String>,
     pub user_pid: Option<String>,
-    }
+}
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.token = Set(self.token.clone());
-      item.user_pid = Set(self.user_pid.clone());
-      }
+        item.token = Set(self.token.clone());
+        item.user_pid = Set(self.user_pid.clone());
+    }
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {

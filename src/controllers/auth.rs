@@ -1,4 +1,8 @@
-use axum::http::{header, HeaderValue};
+use axum::{
+    extract::Form,
+    http::{header, HeaderValue},
+    response::{IntoResponse, Redirect},
+};
 
 use crate::{
     mailers::auth::AuthMailer,
@@ -6,7 +10,10 @@ use crate::{
         _entities::users,
         users::{LoginParams, RegisterParams},
     },
-    views::{self, auth::{CurrentResponse, LoginResponse}},
+    views::{
+        self,
+        auth::{CurrentResponse, LoginResponse},
+    },
 };
 use loco_rs::prelude::*;
 use regex::Regex;
@@ -163,10 +170,9 @@ async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -
     );
 
     let mut response = format::json(LoginResponse::new(&user, &token))?;
-    response.headers_mut().insert(
-        header::SET_COOKIE,
-        HeaderValue::from_str(&cookie_value)?,
-    );
+    response
+        .headers_mut()
+        .insert(header::SET_COOKIE, HeaderValue::from_str(&cookie_value)?);
 
     Ok(response)
 }
@@ -285,10 +291,48 @@ pub fn routes() -> Routes {
         .add("/resend-verification-mail", post(resend_verification_email))
 }
 
+#[debug_handler]
 pub async fn render_login(ViewEngine(v): ViewEngine<TeraView>) -> Result<impl IntoResponse> {
     views::login::login(v)
 }
 
+#[debug_handler]
+pub async fn handle_login(
+    State(ctx): State<AppContext>,
+    Form(params): Form<LoginParams>,
+) -> Result<Response> {
+    let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
+        tracing::debug!(
+            email = params.email,
+            "login attempt via form with non-existent email"
+        );
+        return Ok(Redirect::to("/login").into_response());
+    };
+
+    if !user.verify_password(&params.password) {
+        tracing::debug!(
+            email = params.email,
+            "login attempt via form with invalid password"
+        );
+        return Ok(Redirect::to("/login").into_response());
+    }
+
+    let jwt_secret = ctx.config.get_jwt_config()?;
+    let token = user.generate_jwt(&jwt_secret.secret, jwt_secret.expiration)?;
+
+    let cookie_value = format!(
+        "token={}; HttpOnly; Path=/; Max-Age={}; SameSite=Lax",
+        token, jwt_secret.expiration
+    );
+
+    let mut response = Redirect::to("/").into_response();
+    response
+        .headers_mut()
+        .insert(header::SET_COOKIE, HeaderValue::from_str(&cookie_value)?);
+
+    Ok(response)
+}
+
 pub fn view_routes() -> Routes {
-    Routes::new().add("/login", get(render_login))
+    Routes::new().add("/login", get(render_login).post(handle_login))
 }

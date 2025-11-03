@@ -1,5 +1,5 @@
+pub use super::_entities::user_doors::{ActiveModel, Entity, Model};
 use sea_orm::entity::prelude::*;
-pub use super::_entities::user_doors::{ActiveModel, Model, Entity};
 pub type UserDoors = Entity;
 
 #[async_trait::async_trait]

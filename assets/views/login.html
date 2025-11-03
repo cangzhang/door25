@@ -9,26 +9,29 @@
     justify-content: center;
     gap: 12px;
   }
+
+  .login {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-top: 48px;
+  }
 </style>
 {% endblock styles %}
 
 {% block content %}
-    <div>
-      <h2 class="title">
-        <img src="/static/logo.svg" alt="" width="48" height="48">
-        Log In
-      </h2>
-    </div>
-    <section>    
-    <article>
-    <form>
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username">
+<section class="login">
+  <h2 class="title">
+    <img src="/static/logo.svg" alt="" width="48" height="48">
+    Log In
+  </h2>
+  <article>
+    <form action="/login" method="post">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" autocomplete="email" required>
       <label for="password">Password:</label>
-      <input type="password" id="password" name="password">
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
       <input type="submit" value="Login">
     </form>
-    </article>
-  </section>
+  </article>
+</section>
 {% endblock content %}
-  
