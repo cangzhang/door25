@@ -219,15 +219,12 @@ pub async fn render_open_door(
     format::render().view(
         &v,
         "door.open.html",
-        data!({
-           "door": door,
-           "response": body,
-        }),
+        data!({ "door": door, "response": body }),
     )
 }
 
 pub fn view_routes() -> Routes {
     Routes::new()
-        .add("/doors", get(render_door_list))
         .add("/door/{door_uid}/open", get(render_open_door))
+        .add("/doors", get(render_door_list))
 }
