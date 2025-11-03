@@ -1,0 +1,45 @@
+<html>
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/picocss/2.1.1/pico.classless.yellow.min.css" integrity="sha512-OkLUupRC+RRbn/HLWfCVf9F2cDd9XGzORlApMv1cLB3vvqts8uoGs5wabTvtcco7vh7IuMbfIvxkU2sCL/sYvg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="preconnect" href="https://use.sevencdn.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://use.sevencdn.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg" href="/static/logo.svg">
+  <style>
+    .space-mono-regular {
+      font-family: "Space Mono", monospace;
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    .space-mono-bold {
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-style: normal;
+    }
+
+    .space-mono-regular-italic {
+      font-family: "Space Mono", monospace;
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    .space-mono-bold-italic {
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-style: italic;
+    }
+    body * {
+      font-family: 'Space Mono', var(--pico-font-family);
+    }
+  </style>
+  {% block head %}
+  <title>{% block title %}{% endblock title %} - Door 25</title>
+  {% endblock head %}
+  {% block styles %}{% endblock styles %}
+<body>
+  <main>
+    {% block content %}{% endblock content %}
+  </main>
+</body>
+</html>
+  

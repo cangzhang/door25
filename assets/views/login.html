@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Log In{% endblock title %}
+{% block styles %}
+<style>
+  h2.title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+</style>
+{% endblock styles %}
+
+{% block content %}
+    <div>
+      <h2 class="title">
+        <img src="/static/logo.svg" alt="" width="48" height="48">
+        Log In
+      </h2>
+    </div>
+    <section>    
+    <article>
+    <form>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username">
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password">
+      <input type="submit" value="Login">
+    </form>
+    </article>
+  </section>
+{% endblock content %}
+  

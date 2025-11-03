@@ -1,5 +1,5 @@
 use loco_rs::prelude::*;
 
 pub fn login(v: impl ViewRenderer) -> Result<impl IntoResponse> {
-    format::render().view(&v, "home/hello.html", data!({}))
+    format::render().view(&v, "login.html", data!({}))
 }

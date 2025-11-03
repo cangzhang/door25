@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="768" height="768" viewBox="0 0 768 768" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Diagonal cyan -> purple -> pink gradient across the whole icon -->
+    <linearGradient id="doorGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#19F0E9"/>
+      <stop offset="38%" stop-color="#7D66FF"/>
+      <stop offset="100%" stop-color="#FF48C8"/>
+    </linearGradient>
+
+    <!-- Soft iOS-style outer shadow -->
+    <filter id="outerShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="14" stdDeviation="24" flood-opacity="0.20" flood-color="#000"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-opacity="0.10" flood-color="#000"/>
+    </filter>
+
+    <!-- Gentle inner glow to simulate subtle light roll-off -->
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="blur"/>
+      <feComposite in="blur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" />
+      <feColorMatrix type="matrix"
+        values="0 0 0 0 1
+                0 0 0 0 1
+                0 0 0 0 1
+                0 0 0 0.10 0" />
+      <feBlend in="SourceGraphic" mode="normal"/>
+    </filter>
+  </defs>
+
+  <!-- Group holds both panels and the shadow -->
+  <g filter="url(#outerShadow)">
+    <!-- Right panel: rounded rectangle -->
+    <rect x="416" y="120" width="280" height="528" rx="100" fill="url(#doorGrad)" />
+
+    <!-- Left panel: stylized rounded door leaf with slanted top/bottom
+         Approximated from the bitmap with smooth corner radii -->
+    <path fill="url(#doorGrad)" d="
+      M 172 220
+      Q 172 160 228 160
+      L 328 160
+      Q 360 160 360 194
+      L 360 574
+      Q 360 616 320 628
+      L 252 644
+      Q 172 664 172 586
+      Z
+      "
+      transform="translate(0,0)"
+    />
+  </g>
+
+  <!-- Subtle inner glow to give premium depth -->
+  <g filter="url(#innerGlow)">
+    <rect x="416" y="120" width="280" height="528" rx="100" fill="transparent"/>
+    <path fill="transparent" d="
+      M 172 220
+      Q 172 160 228 160
+      L 328 160
+      Q 360 160 360 194
+      L 360 574
+      Q 360 616 320 628
+      L 252 644
+      Q 172 664 172 586
+      Z" />
+  </g>
+</svg>
