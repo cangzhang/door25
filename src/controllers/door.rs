@@ -59,7 +59,7 @@ pub async fn add(
     };
     params.apply(&mut item);
     let item = item.insert(&ctx.db).await?;
-    let user_pid = auth.claims.pid.clone();
+    let user_pid = auth.claims.pid.to_string();
     let link = user_doors::ActiveModel {
         user_pid: Set(user_pid),
         door_uid: Set(item.uid.to_string()),
