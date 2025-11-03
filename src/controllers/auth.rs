@@ -3,6 +3,10 @@ use axum::{
     http::{header, HeaderValue},
     response::{IntoResponse, Redirect},
 };
+use loco_rs::prelude::*;
+use regex::Regex;
+use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 
 use crate::{
     mailers::auth::AuthMailer,
@@ -10,15 +14,8 @@ use crate::{
         _entities::users,
         users::{LoginParams, RegisterParams},
     },
-    views::{
-        self,
-        auth::{CurrentResponse, LoginResponse},
-    },
+    views::auth::{CurrentResponse, LoginResponse},
 };
-use loco_rs::prelude::*;
-use regex::Regex;
-use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
 
 pub static EMAIL_DOMAIN_RE: OnceLock<Regex> = OnceLock::new();
 
@@ -292,8 +289,8 @@ pub fn routes() -> Routes {
 }
 
 #[debug_handler]
-pub async fn render_login(ViewEngine(v): ViewEngine<TeraView>) -> Result<impl IntoResponse> {
-    views::login::login(v)
+pub async fn render_login_view(ViewEngine(v): ViewEngine<TeraView>) -> Result<impl IntoResponse> {
+    format::render().view(&v, "login.html", data!({}))
 }
 
 #[debug_handler]
@@ -333,6 +330,20 @@ pub async fn handle_login(
     Ok(response)
 }
 
+#[debug_handler]
+pub async fn render_home(
+    State(_ctx): State<AppContext>,
+    auth: auth::JWT,
+) -> Result<Response> {
+    if auth.claims.pid.is_empty() {
+        return Ok(Redirect::to("/login").into_response());
+    }
+
+    Ok(Redirect::to("/doors").into_response())
+}
+
 pub fn view_routes() -> Routes {
-    Routes::new().add("/login", get(render_login).post(handle_login))
+    Routes::new()
+        .add("/login", get(render_login_view).post(handle_login))
+        .add("/", get(render_home))
 }

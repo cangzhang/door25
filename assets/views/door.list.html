@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}My Doors{% endblock title %}
+{% block styles %}
+<style>
+  h2.title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+</style>
+{% endblock styles %}
+
+{% block content %}
+<section>
+  <h2 class="title">
+    <img src="/static/logo.svg" alt="" width="48" height="48">
+    My Doors
+  </h2>
+  <article>
+    <table>
+      <thead>
+        <tr>
+          <th>Door Name</th>
+          <th>UID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for door in doors %}
+        <tr>
+          <td>{{ door.uid }}</td>
+          <td>
+            <pre>{{ door.door_info | json_encode(pretty=true) }}</pre>
+          </td>
+          <td>
+            <a href="/door/{{ door.uid }}/open">Open</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </article>
+</section>
+{% endblock content %}

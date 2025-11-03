@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Open Door{% endblock title %}
+{% block styles %}
+<style>
+  h2.title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+</style>
+{% endblock styles %}
+
+{% block content %}
+<section>
+  <h2 class="title">
+    <img src="/static/logo.svg" alt="" width="48" height="48">
+    Result of Opening Door
+  </h2>
+  <article>
+    <pre>{{ door | json_encode(pretty=true) }}</pre>
+    <pre>{{ response | json_encode(pretty=true) }}</pre>
+  </article>
+</section>
+{% endblock content %}
