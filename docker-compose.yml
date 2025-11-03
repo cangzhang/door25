@@ -1,0 +1,18 @@
+services:
+  door25:
+    build: .
+    image: door25:latest
+    container_name: door25
+    command: ["start", "--environment", "production"]
+    environment:
+      - DATABASE_URL=sqlite:///usr/app/data/door25.sqlite?mode=rwc
+      - RUST_LOG=info
+    ports:
+      - "5151:5151"
+    volumes:
+      - door25_data:/usr/app/data
+      - ./config/production.yaml:/usr/app/config/production.yaml:ro
+    restart: unless-stopped
+
+volumes:
+  door25_data:
