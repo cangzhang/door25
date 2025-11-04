@@ -3,7 +3,9 @@
 #![allow(clippy::unused_async)]
 use axum::response::Redirect;
 use loco_rs::prelude::*;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::{sync::OnceLock, time::Duration};
 
 use crate::models::_entities::{
     door_confs::{ActiveModel, Column, Entity, Model},
@@ -19,6 +21,34 @@ impl Params {
     fn apply(&self, item: &mut ActiveModel) {
         item.door_info = Set(self.door_info.clone());
     }
+}
+
+const OCT_OPEN_URL: &str =
+    "https://octlife.octlife.cn/consumer/mall-applets-management/entrance/openDor";
+static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
+
+fn http_client() -> &'static Client {
+    HTTP_CLIENT.get_or_init(Client::new)
+}
+
+async fn call_octlife_open_door(
+    openid: &str,
+    token: &str,
+    door_info: Option<serde_json::Value>,
+) -> Result<serde_json::Value> {
+    let payload = door_info.unwrap_or(serde_json::Value::Null);
+    http_client()
+        .post(OCT_OPEN_URL)
+        .header("openid", openid)
+        .header("token", token)
+        .timeout(Duration::from_secs(5))
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| Error::BadRequest(format!("Failed to send request: {}", e)))?
+        .json::<serde_json::Value>()
+        .await
+        .map_err(|e| Error::BadRequest(format!("Failed to read response: {}", e)))
 }
 
 async fn load_item(ctx: &AppContext, uid: String) -> Result<Model> {
@@ -104,15 +134,7 @@ pub async fn open(
     let oct_conf = oct_conf.unwrap();
     let openid = oct_conf.openid.clone().unwrap();
     let token = oct_conf.token.clone().unwrap();
-    let body =
-        ureq::post("https://octlife.octlife.cn/consumer/mall-applets-management/entrance/openDor")
-            .header("openid", &openid)
-            .header("token", &token)
-            .send_json(&door.door_info)
-            .map_err(|e| Error::BadRequest(format!("Failed to send request: {}", e)))?
-            .body_mut()
-            .read_json::<serde_json::Value>()
-            .map_err(|e| Error::BadRequest(format!("Failed to read response: {}", e)))?;
+    let body = call_octlife_open_door(&openid, &token, door.door_info.clone()).await?;
 
     format::json({
         serde_json::json!({
@@ -206,15 +228,7 @@ pub async fn render_open_door(
     let oct_conf = oct_conf.unwrap();
     let openid = oct_conf.openid.clone().unwrap();
     let token = oct_conf.token.clone().unwrap();
-    let body =
-        ureq::post("https://octlife.octlife.cn/consumer/mall-applets-management/entrance/openDor")
-            .header("openid", &openid)
-            .header("token", &token)
-            .send_json(&door.door_info)
-            .map_err(|e| Error::BadRequest(format!("Failed to send request: {}", e)))?
-            .body_mut()
-            .read_json::<serde_json::Value>()
-            .map_err(|e| Error::BadRequest(format!("Failed to read response: {}", e)))?;
+    let body = call_octlife_open_door(&openid, &token, door.door_info.clone()).await?;
 
     format::render().view(
         &v,

@@ -331,10 +331,7 @@ pub async fn handle_login(
 }
 
 #[debug_handler]
-pub async fn render_home(
-    State(_ctx): State<AppContext>,
-    auth: auth::JWT,
-) -> Result<Response> {
+pub async fn render_home(State(_ctx): State<AppContext>, auth: auth::JWT) -> Result<Response> {
     if auth.claims.pid.is_empty() {
         return Ok(Redirect::to("/login").into_response());
     }
