@@ -1,4 +1,9 @@
-target
+target/*
+!target/x86_64-unknown-linux-gnu/
+target/x86_64-unknown-linux-gnu/*
+!target/x86_64-unknown-linux-gnu/release/
+target/x86_64-unknown-linux-gnu/release/*
+!target/x86_64-unknown-linux-gnu/release/door25-cli
 Dockerfile
 .dockerignore
 .git

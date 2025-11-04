@@ -1,0 +1,9 @@
+FROM debian:trixie-slim
+
+WORKDIR /usr/app
+
+COPY assets assets
+COPY config config
+COPY target/x86_64-unknown-linux-gnu/release/door25-cli door25-cli
+
+ENTRYPOINT ["/usr/app/door25-cli"]
