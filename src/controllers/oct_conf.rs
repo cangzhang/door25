@@ -10,13 +10,7 @@ use crate::models::_entities::oct_confs::{ActiveModel, Entity, Model};
 pub struct Params {
     pub token: Option<String>,
     pub user_pid: Option<String>,
-}
-
-impl Params {
-    fn update(&self, item: &mut ActiveModel) {
-        item.token = Set(self.token.clone());
-        item.user_pid = Set(self.user_pid.clone());
-    }
+    pub openid: Option<String>,
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
@@ -30,25 +24,19 @@ pub async fn list(State(ctx): State<AppContext>) -> Result<Response> {
 }
 
 #[debug_handler]
-pub async fn add(State(ctx): State<AppContext>, Json(params): Json<Params>) -> Result<Response> {
-    let mut item = ActiveModel {
-        ..Default::default()
-    };
-    params.update(&mut item);
-    let item = item.insert(&ctx.db).await?;
-    format::json(item)
-}
-
-#[debug_handler]
-pub async fn update(
-    Path(id): Path<i32>,
+pub async fn add(
+    auth: auth::JWT,
     State(ctx): State<AppContext>,
     Json(params): Json<Params>,
 ) -> Result<Response> {
-    let item = load_item(&ctx, id).await?;
-    let mut item = item.into_active_model();
-    params.update(&mut item);
-    let item = item.update(&ctx.db).await?;
+    let user_pid = auth.claims.pid.to_string();
+    let item = ActiveModel {
+        user_pid: Set(Some(user_pid.clone())),
+        token: Set(params.token.clone()),
+        openid: Set(params.openid.clone()),
+        ..Default::default()
+    };
+    let item = item.insert(&ctx.db).await?;
     format::json(item)
 }
 
@@ -65,11 +53,9 @@ pub async fn get_one(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Resu
 
 pub fn routes() -> Routes {
     Routes::new()
-        .prefix("api/oct_confs/")
+        .prefix("api/oct-confs/")
         .add("/", get(list))
         .add("/", post(add))
         .add("{id}", get(get_one))
         .add("{id}", delete(remove))
-        .add("{id}", put(update))
-        .add("{id}", patch(update))
 }

@@ -65,7 +65,7 @@ pub async fn get_one(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Resu
 
 pub fn routes() -> Routes {
     Routes::new()
-        .prefix("api/door_confs/")
+        .prefix("api/door-confs/")
         .add("/", get(list))
         .add("/", post(add))
 }
