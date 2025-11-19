@@ -40,6 +40,10 @@
   <main>
     {% block content %}{% endblock content %}
   </main>
+  <!-- generate timestamp for browser local time in footer -->
+  <footer>
+    <p>Generated at {{ now.format("%Y-%m-%d %H:%M:%S") }}</p>
+  </footer>
 </body>
 </html>
   
