@@ -9,6 +9,13 @@
     justify-content: center;
     gap: 12px;
   }
+  article:last-child, pre:last-child, section {
+    margin-bottom: 0px;
+  }
+  main+footer {
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
 </style>
 {% endblock styles %}
 
@@ -16,7 +23,7 @@
 <section>
   <h2 class="title">
     <img src="/static/logo.svg" alt="" width="48" height="48">
-    Result of Opening Door
+    Opening Door
   </h2>
   <article>
     <h8>Door</h8>
