@@ -110,3 +110,55 @@ jobs:
             ghcr.io/${{ steps.repo.outputs.owner }}/door25:latest
             ${{ vars.DOCKERHUB_USERNAME }}/door25:latest
 
+      - name: Output image URLs
+        run: |
+          echo "# Docker Images Published 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Timestamp: \`${{ steps.timestamp.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### GitHub Container Registry:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`ghcr.io/${{ steps.repo.outputs.owner }}/door25:${{ steps.timestamp.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`ghcr.io/${{ steps.repo.outputs.owner }}/door25:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Docker Hub:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ vars.DOCKERHUB_USERNAME }}/door25:${{ steps.timestamp.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ vars.DOCKERHUB_USERNAME }}/door25:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pull commands:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/${{ steps.repo.outputs.owner }}/door25:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Docker Hub" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ vars.DOCKERHUB_USERNAME }}/door25:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create image URLs file
+        run: |
+          cat > docker-images.txt << EOF
+          Docker Images Published
+          =======================
+          Timestamp: ${{ steps.timestamp.outputs.tag }}
+          
+          GitHub Container Registry:
+          - ghcr.io/${{ steps.repo.outputs.owner }}/door25:${{ steps.timestamp.outputs.tag }}
+          - ghcr.io/${{ steps.repo.outputs.owner }}/door25:latest
+          
+          Docker Hub:
+          - ${{ vars.DOCKERHUB_USERNAME }}/door25:${{ steps.timestamp.outputs.tag }}
+          - ${{ vars.DOCKERHUB_USERNAME }}/door25:latest
+          
+          Pull commands:
+          # GitHub Container Registry
+          docker pull ghcr.io/${{ steps.repo.outputs.owner }}/door25:latest
+          
+          # Docker Hub
+          docker pull ${{ vars.DOCKERHUB_USERNAME }}/door25:latest
+          EOF
+
+      - name: Upload image URLs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-urls
+          path: docker-images.txt
+
