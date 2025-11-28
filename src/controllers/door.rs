@@ -1,11 +1,13 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
-use axum::response::Redirect;
+use axum::{middleware, response::Redirect};
 use loco_rs::prelude::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{sync::OnceLock, time::Duration};
+
+use crate::middleware::browser_auth_middleware;
 
 use crate::models::_entities::{
     door_confs::{ActiveModel, Column, Entity, Model},
@@ -237,8 +239,12 @@ pub async fn render_open_door(
     )
 }
 
-pub fn view_routes() -> Routes {
+pub fn view_routes(ctx: &AppContext) -> Routes {
     Routes::new()
         .add("/door/{door_uid}/open", get(render_open_door))
         .add("/doors", get(render_door_list))
+        .layer(middleware::from_fn_with_state(
+            ctx.clone(),
+            browser_auth_middleware,
+        ))
 }

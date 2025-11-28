@@ -1,6 +1,7 @@
 use axum::{
     extract::Form,
     http::{header, HeaderValue},
+    middleware,
     response::{IntoResponse, Redirect},
 };
 use loco_rs::prelude::*;
@@ -10,6 +11,7 @@ use std::sync::OnceLock;
 
 use crate::{
     mailers::auth::AuthMailer,
+    middleware::browser_auth_middleware,
     models::{
         _entities::users,
         users::{LoginParams, RegisterParams},
@@ -331,16 +333,20 @@ pub async fn handle_login(
 }
 
 #[debug_handler]
-pub async fn render_home(State(_ctx): State<AppContext>, auth: auth::JWT) -> Result<Response> {
-    if auth.claims.pid.is_empty() {
-        return Ok(Redirect::to("/login").into_response());
-    }
-
+pub async fn render_home() -> Result<Response> {
     Ok(Redirect::to("/doors").into_response())
 }
 
-pub fn view_routes() -> Routes {
+pub fn public_view_routes() -> Routes {
     Routes::new()
         .add("/login", get(render_login_view).post(handle_login))
+}
+
+pub fn protected_view_routes(ctx: &AppContext) -> Routes {
+    Routes::new()
         .add("/", get(render_home))
+        .layer(middleware::from_fn_with_state(
+            ctx.clone(),
+            browser_auth_middleware,
+        ))
 }

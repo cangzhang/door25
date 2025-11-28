@@ -49,14 +49,15 @@ impl Hooks for App {
         )])
     }
 
-    fn routes(_ctx: &AppContext) -> AppRoutes {
+    fn routes(ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::door_conf::routes())
             .add_route(controllers::door::routes())
             .add_route(controllers::oct_conf::routes())
             .add_route(controllers::auth::routes())
-            .add_route(controllers::door::view_routes())
-            .add_route(controllers::auth::view_routes())
+            .add_route(controllers::door::view_routes(ctx))
+            .add_route(controllers::auth::protected_view_routes(ctx))
+            .add_route(controllers::auth::public_view_routes())
     }
     async fn connect_workers(ctx: &AppContext, queue: &Queue) -> Result<()> {
         queue.register(DownloadWorker::build(ctx)).await?;
