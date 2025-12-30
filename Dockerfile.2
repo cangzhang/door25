@@ -7,18 +7,25 @@ WORKDIR /usr/app
 COPY assets assets
 COPY config config
 
-# Copy target directory structure (only the relevant binary will exist for each platform)
+# Copy target directory structure (both binaries are in context, but we'll select the correct one)
 COPY target/ target/
 
-# Find and copy the correct binary based on target architecture
+# Select and copy the correct binary based on target architecture
 # TARGETARCH is automatically set by Docker Buildx: amd64 or arm64
-RUN BINARY=$(find target/ -name "door25-cli" -type f | head -n 1) && \
-    if [ -z "$BINARY" ]; then \
-      echo "Error: door25-cli binary not found in target/" && \
-      find target/ -type f 2>/dev/null || echo "target/ directory is empty or missing" && \
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+      BINARY_PATH="target/x86_64-unknown-linux-gnu/release/door25-cli"; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+      BINARY_PATH="target/aarch64-unknown-linux-gnu/release/door25-cli"; \
+    else \
+      echo "Unsupported architecture: $TARGETARCH" && exit 1; \
+    fi && \
+    if [ ! -f "$BINARY_PATH" ]; then \
+      echo "Error: Binary not found at $BINARY_PATH for architecture $TARGETARCH" && \
+      echo "Available binaries:" && \
+      find target/ -name "door25-cli" -type f 2>/dev/null || true && \
       exit 1; \
     fi && \
-    cp "$BINARY" door25-cli && \
+    cp "$BINARY_PATH" door25-cli && \
     chmod +x door25-cli && \
     rm -rf target
 

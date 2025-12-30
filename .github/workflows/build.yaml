@@ -84,6 +84,24 @@ jobs:
           name: door25-linux-aarch64
           path: target/aarch64-unknown-linux-gnu/release/
 
+      - name: Verify binaries are in correct locations
+        run: |
+          echo "Verifying binary locations..."
+          if [ ! -f "target/x86_64-unknown-linux-gnu/release/door25-cli" ]; then
+            echo "Error: x86_64 binary not found!"
+            exit 1
+          fi
+          if [ ! -f "target/aarch64-unknown-linux-gnu/release/door25-cli" ]; then
+            echo "Error: arm64 binary not found!"
+            exit 1
+          fi
+          echo "✓ x86_64 binary found: target/x86_64-unknown-linux-gnu/release/door25-cli"
+          echo "✓ arm64 binary found: target/aarch64-unknown-linux-gnu/release/door25-cli"
+          ls -lh target/x86_64-unknown-linux-gnu/release/door25-cli
+          ls -lh target/aarch64-unknown-linux-gnu/release/door25-cli
+          file target/x86_64-unknown-linux-gnu/release/door25-cli || echo "file command not available"
+          file target/aarch64-unknown-linux-gnu/release/door25-cli || echo "file command not available"
+
       - name: Make binaries executable
         run: |
           chmod +x target/x86_64-unknown-linux-gnu/release/door25-cli
