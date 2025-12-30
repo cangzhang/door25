@@ -44,6 +44,10 @@ jobs:
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          # Explicitly set cache key to include target architecture
+          # This ensures x86_64 and arm64 builds have separate caches
+          key: rust-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build release binary
         env:
