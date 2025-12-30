@@ -1,9 +1,25 @@
 FROM debian:trixie-slim
 
+ARG TARGETARCH
+
 WORKDIR /usr/app
 
 COPY assets assets
 COPY config config
-COPY target/x86_64-unknown-linux-gnu/release/door25-cli door25-cli
+
+# Copy target directories (will contain the appropriate binary for each architecture)
+COPY target/ target/
+
+# Select the correct binary based on target architecture
+# TARGETARCH is automatically set by Docker Buildx: amd64 or arm64
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+      cp target/x86_64-unknown-linux-gnu/release/door25-cli door25-cli; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+      cp target/aarch64-unknown-linux-gnu/release/door25-cli door25-cli; \
+    else \
+      echo "Unsupported architecture: $TARGETARCH" && exit 1; \
+    fi && \
+    chmod +x door25-cli && \
+    rm -rf target
 
 ENTRYPOINT ["/usr/app/door25-cli"]

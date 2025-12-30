@@ -13,8 +13,15 @@ env:
 
 jobs:
   build-linux:
-    name: Build Linux x86_64
+    name: Build Linux (${{ matrix.target }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            artifact: door25-linux-x86_64
+          - target: aarch64-unknown-linux-gnu
+            artifact: door25-linux-aarch64
 
     permissions:
       contents: read
@@ -27,19 +34,25 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
-          targets: x86_64-unknown-linux-gnu
+          targets: ${{ matrix.target }}
+
+      - name: Install ARM64 cross compiler
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
       - name: Build release binary
-        run: cargo build --release --target x86_64-unknown-linux-gnu
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: door25-linux-x86_64
-          path: target/x86_64-unknown-linux-gnu/release/door25-cli
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/door25-cli
           if-no-files-found: error
 
   docker-build-push:
@@ -57,14 +70,22 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
-      - name: Download binary artifact
+      - name: Download x86_64 binary artifact
         uses: actions/download-artifact@v4
         with:
           name: door25-linux-x86_64
           path: target/x86_64-unknown-linux-gnu/release/
 
-      - name: Make binary executable
-        run: chmod +x target/x86_64-unknown-linux-gnu/release/door25-cli
+      - name: Download arm64 binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: door25-linux-aarch64
+          path: target/aarch64-unknown-linux-gnu/release/
+
+      - name: Make binaries executable
+        run: |
+          chmod +x target/x86_64-unknown-linux-gnu/release/door25-cli
+          chmod +x target/aarch64-unknown-linux-gnu/release/door25-cli
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -95,6 +116,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.2
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner }}/door25:${{ steps.timestamp.outputs.tag }}
@@ -105,6 +127,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.2
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner }}/door25:latest
@@ -115,6 +138,8 @@ jobs:
           echo "# Docker Images Published 🚀" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Timestamp: \`${{ steps.timestamp.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Multi-arch support:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Container Registry:" >> $GITHUB_STEP_SUMMARY
           echo "- \`ghcr.io/${{ steps.repo.outputs.owner }}/door25:${{ steps.timestamp.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
@@ -139,6 +164,8 @@ jobs:
           Docker Images Published
           =======================
           Timestamp: ${{ steps.timestamp.outputs.tag }}
+          
+          Multi-arch support: linux/amd64, linux/arm64
           
           GitHub Container Registry:
           - ghcr.io/${{ steps.repo.outputs.owner }}/door25:${{ steps.timestamp.outputs.tag }}
