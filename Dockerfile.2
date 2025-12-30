@@ -7,18 +7,18 @@ WORKDIR /usr/app
 COPY assets assets
 COPY config config
 
-# Copy target directories (will contain the appropriate binary for each architecture)
+# Copy target directory structure (only the relevant binary will exist for each platform)
 COPY target/ target/
 
-# Select the correct binary based on target architecture
+# Find and copy the correct binary based on target architecture
 # TARGETARCH is automatically set by Docker Buildx: amd64 or arm64
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-      cp target/x86_64-unknown-linux-gnu/release/door25-cli door25-cli; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-      cp target/aarch64-unknown-linux-gnu/release/door25-cli door25-cli; \
-    else \
-      echo "Unsupported architecture: $TARGETARCH" && exit 1; \
+RUN BINARY=$(find target/ -name "door25-cli" -type f | head -n 1) && \
+    if [ -z "$BINARY" ]; then \
+      echo "Error: door25-cli binary not found in target/" && \
+      find target/ -type f 2>/dev/null || echo "target/ directory is empty or missing" && \
+      exit 1; \
     fi && \
+    cp "$BINARY" door25-cli && \
     chmod +x door25-cli && \
     rm -rf target
 
