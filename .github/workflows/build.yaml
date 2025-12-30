@@ -46,6 +46,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build release binary
+        env:
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Upload binary artifact
