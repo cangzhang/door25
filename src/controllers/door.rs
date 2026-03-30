@@ -25,12 +25,18 @@ impl Params {
     }
 }
 
-const OCT_OPEN_URL: &str =
+pub(crate) const OCT_OPEN_URL: &str =
     "https://octlife.octlife.cn/consumer/mall-applets-management/entrance/openDor";
 static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
 
-fn http_client() -> &'static Client {
-    HTTP_CLIENT.get_or_init(Client::new)
+pub(crate) fn http_client() -> &'static Client {
+    HTTP_CLIENT.get_or_init(|| {
+        Client::builder()
+            .pool_idle_timeout(None)
+            .tcp_keepalive(Duration::from_secs(30))
+            .build()
+            .expect("Failed to build HTTP client")
+    })
 }
 
 async fn call_octlife_open_door(
