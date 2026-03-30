@@ -39,24 +39,49 @@ pub(crate) fn http_client() -> &'static Client {
     })
 }
 
+const OCT_MAX_RETRIES: u32 = 3;
+
 async fn call_octlife_open_door(
     openid: &str,
     token: &str,
     door_info: Option<serde_json::Value>,
 ) -> Result<serde_json::Value> {
     let payload = door_info.unwrap_or(serde_json::Value::Null);
-    http_client()
-        .post(OCT_OPEN_URL)
-        .header("openid", openid)
-        .header("token", token)
-        .timeout(Duration::from_secs(5))
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| Error::BadRequest(format!("Failed to send request: {}", e)))?
-        .json::<serde_json::Value>()
-        .await
-        .map_err(|e| Error::BadRequest(format!("Failed to read response: {}", e)))
+    let mut last_err = None;
+
+    for attempt in 1..=OCT_MAX_RETRIES {
+        let resp = http_client()
+            .post(OCT_OPEN_URL)
+            .header("openid", openid)
+            .header("token", token)
+            .timeout(Duration::from_secs(5))
+            .json(&payload)
+            .send()
+            .await;
+
+        match resp {
+            Ok(r) => {
+                return r
+                    .json::<serde_json::Value>()
+                    .await
+                    .map_err(|e| Error::BadRequest(format!("Failed to read response: {}", e)));
+            }
+            Err(e) => {
+                tracing::warn!(
+                    "OCT request attempt {attempt}/{OCT_MAX_RETRIES} failed: {e}"
+                );
+                last_err = Some(e);
+                if attempt < OCT_MAX_RETRIES {
+                    tokio::time::sleep(Duration::from_millis(200 * u64::from(attempt))).await;
+                }
+            }
+        }
+    }
+
+    Err(Error::BadRequest(format!(
+        "Failed to send request after {OCT_MAX_RETRIES} attempts: {}",
+        last_err.unwrap()
+    )))
 }
 
 async fn load_item(ctx: &AppContext, uid: String) -> Result<Model> {
